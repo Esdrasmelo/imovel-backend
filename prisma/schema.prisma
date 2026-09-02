@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Imovel {
+  id                 String   @id @default(uuid())
+  externalId         String
+  fonteId            String
+  fonte              FonteDados @relation(fields: [fonteId], references: [id])
+
+  titulo             String
+  descricao          String?
+  url                String
+  urlImagens         String?
+
+  preco              Float?
+  precoPorM2         Float?
+  valorCondominio    Float?
+
+  tipoImovel         String
+  tipoNegocio        String
+  statusConstrucao   String?
+
+  areaUtil           Float?
+  areaTotal          Float?
+  quartos            Int?
+  suites             Int?
+  banheiros          Int?
+  vagas              Int?
+
+  cep                String?
+  logradouro         String?
+  numero             String?
+  complemento        String?
+  bairro             String?
+  cidade             String   @default("Sorocaba")
+  estado             String   @default("SP")
+  latitude           Float?
+  longitude          Float?
+
+  nomeEmpreendimento String?
+  construtora        String?
+  aceitaFinanciamento Boolean?
+  codigoImovel       String?
+
+  dataPublicacao     DateTime?
+  dataAtualizacao    DateTime?
+
+  criadoEm           DateTime @default(now())
+  atualizadoEm       DateTime @updatedAt
+  ativo              Boolean  @default(true)
+
+  @@unique([fonteId, externalId])
+  @@index([cidade, tipoImovel, tipoNegocio])
+  @@index([preco])
+  @@index([bairro])
+  @@index([statusConstrucao])
+  @@index([construtora])
+
+  @@map("imoveis")
+}
+
+model FonteDados {
+  id        String   @id @default(uuid())
+  nome      String   @unique
+  tipo      String
+  urlBase   String
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+
+  imoveis   Imovel[]
+  execucoes ExecucaoColeta[]
+
+  @@map("fontes_dados")
+}
+
+model ExecucaoColeta {
+  id               String    @id @default(uuid())
+  fonteId          String
+  fonte            FonteDados @relation(fields: [fonteId], references: [id])
+
+  status           String
+  iniciadoEm       DateTime  @default(now())
+  finalizadoEm     DateTime?
+
+  totalEncontrados Int       @default(0)
+  totalNovos       Int       @default(0)
+  totalAtualizados Int       @default(0)
+  totalErros       Int       @default(0)
+  mensagemErro     String?
+
+  @@index([fonteId, iniciadoEm])
+
+  @@map("execucoes_coleta")
+}
